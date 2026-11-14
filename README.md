@@ -1,4 +1,4 @@
-# flutter_application_1
+# Awesome meal planner
 
 A new Flutter project.
 
