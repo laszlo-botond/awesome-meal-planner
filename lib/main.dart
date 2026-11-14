@@ -4,6 +4,7 @@ import 'repositories/mock_meal_repository.dart';
 import 'screens/home_screen.dart';
 import 'services/mock_meal_data_source.dart';
 import 'viewmodels/home_viewmodel.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const MealPlannerApp());
@@ -45,17 +46,7 @@ class _MealPlannerAppState extends State<MealPlannerApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Meal Planner',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF8F8FA),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9147F5),
-          primary: const Color(0xFF9147F5),
-          surface: const Color(0xFFF8F8FA),
-        ),
-        fontFamily: 'Roboto',
-      ),
+      theme: AppTheme.light,
       home: HomeScreen(
         viewModel: _homeViewModel,
       ),
