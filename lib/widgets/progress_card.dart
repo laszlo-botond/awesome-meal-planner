@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class ProgressCard extends StatelessWidget {
   final int calories;
   final double proteinPercentage;
@@ -63,6 +65,8 @@ class ProgressCard extends StatelessWidget {
               ),
             ],
           ),
+
+          _buildEncouragementMessage()
         ],
       ),
     );
@@ -149,4 +153,38 @@ class ProgressCard extends StatelessWidget {
       ],
     );
   }
+
+  Widget _buildEncouragementMessage() {
+  return Container(
+    padding: const EdgeInsets.all(AppSpacing.sm),
+    decoration: BoxDecoration(
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(AppRadii.medium),
+    ),
+    child: Row(
+      children: [
+        const CircleAvatar(
+          radius: 18,
+          backgroundColor: AppColors.border,
+          child: Icon(
+            Icons.person,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        const Expanded(
+          child: Text(
+            "Keep the pace! You're doing great.",
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

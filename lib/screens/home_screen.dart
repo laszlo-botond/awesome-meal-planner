@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/meal.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../widgets/progress_card.dart';
+import '../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   final HomeViewModel viewModel;
@@ -103,9 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           _buildProgressSection(),
-          const SizedBox(height: 16),
-          _buildDailyReminder(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.md),
           _buildMealSection(),
         ],
       ),
@@ -120,45 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
       proteinPercentage: 0.75,
       carbsPercentage: 0.60,
       fatsPercentage: 0.45,
-    );
-  }
-
-  // Daily reminder
-
-  Widget _buildDailyReminder() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.notifications_active_outlined,
-            color: Color(0xFF9147F5),
-          ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Keep me posted on your daily progress.',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              // Reminder preferences will be implemented later.
-            },
-            icon: const Icon(
-              Icons.arrow_forward_ios,
-              size: 15,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
