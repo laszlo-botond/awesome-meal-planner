@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/meal.dart';
+import 'recipe_details_screen.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../widgets/progress_card.dart';
 import '../theme/app_theme.dart';
@@ -132,13 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Recommended for you',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             TextButton(
@@ -162,7 +160,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ...meals.map(
             (meal) => Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: _MealCard(meal: meal),
+              child: _MealCard(
+                meal: meal,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RecipeDetailsScreen(meal: meal),
+                  ),
+                ),
+              ),
             ),
           ),
       ],
@@ -238,86 +243,65 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _MealCard extends StatelessWidget {
   final Meal meal;
+  final VoidCallback onTap;
 
   const _MealCard({
     required this.meal,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(AppRadii.large),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.large),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.large),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildImage(),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  meal.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  meal.description,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildImage(),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.schedule,
-                      size: 15,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${meal.preparationTimeMinutes} min',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    const SizedBox(width: 16),
-                    const Icon(
-                      Icons.local_fire_department_outlined,
-                      size: 15,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${meal.calories.round()} kcal',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                      color: Color(0xFF9147F5),
+                    Text(meal.name, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(meal.description, style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule, size: 15, color: AppColors.textSecondary),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text('${meal.preparationTimeMinutes} min', style: AppTypography.label),
+                        const SizedBox(width: AppSpacing.md),
+                        const Icon(Icons.local_fire_department_outlined, size: 15, color: AppColors.textSecondary),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text('${meal.calories.round()} kcal', style: AppTypography.label),
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.primary),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -328,11 +312,7 @@ class _MealCard extends StatelessWidget {
         height: 170,
         width: double.infinity,
         color: const Color(0xFFEDE5F9),
-        child: const Icon(
-          Icons.restaurant,
-          size: 48,
-          color: Color(0xFF9147F5),
-        ),
+        child: const Icon(Icons.restaurant, size: 48, color: AppColors.primary),
       );
     }
 
@@ -341,18 +321,12 @@ class _MealCard extends StatelessWidget {
       height: 170,
       width: double.infinity,
       fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          height: 170,
-          width: double.infinity,
-          color: const Color(0xFFEDE5F9),
-          child: const Icon(
-            Icons.broken_image_outlined,
-            size: 40,
-            color: Color(0xFF9147F5),
-          ),
-        );
-      },
+      errorBuilder: (context, error, stackTrace) => Container(
+        height: 170,
+        width: double.infinity,
+        color: const Color(0xFFEDE5F9),
+        child: const Icon(Icons.broken_image_outlined, size: 40, color: AppColors.primary),
+      ),
     );
   }
 }
