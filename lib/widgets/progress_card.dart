@@ -38,12 +38,25 @@ class ProgressCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Today's Progress",
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Today's Progress",
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Text(
+                'View more',
+                style: TextStyle(
+                  color: AppColors.navLinkText,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
 
@@ -53,19 +66,19 @@ class ProgressCard extends StatelessWidget {
             children: [
               _buildCalories(),
               _buildMacroProgress(
+                label: 'Fats',
+                percentage: fatsPercentage,
+                color: AppColors.fats,
+              ),
+              _buildMacroProgress(
                 label: 'Protein',
                 percentage: proteinPercentage,
-                color: const Color(0xFFFFB74D),
+                color: AppColors.protein,
               ),
               _buildMacroProgress(
                 label: 'Carbs',
                 percentage: carbsPercentage,
-                color: const Color(0xFF66BB6A),
-              ),
-              _buildMacroProgress(
-                label: 'Fats',
-                percentage: fatsPercentage,
-                color: const Color(0xFF64B5F6),
+                color: AppColors.carbohydrates,
               ),
             ],
           ),

@@ -12,9 +12,10 @@ class AppColors {
   static const Color background = Color(0xFFFFFFFF);
   static const Color surface = Color(0xFFF7F7F7);
   static const Color border = Color(0xFFE5E5E5);
+  static const Color navLinkText = Color(0xFF1F73F1);
 
   // Progress indicators
-  static const Color protein = Color(0xFFFFA726);
-  static const Color carbohydrates = Color(0xFF66BB6A);
-  static const Color fats = Color(0xFF42A5F5);
+  static const Color fats = Color(0xFFFEC635);
+  static const Color carbohydrates = Color(0xFF7876F5);
+  static const Color protein = Color(0xFF3585FE);
 }

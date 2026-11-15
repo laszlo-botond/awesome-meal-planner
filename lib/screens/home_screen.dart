@@ -117,9 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildProgressSection() {
     return const ProgressCard(
       calories: 1248,
-      proteinPercentage: 0.75,
-      carbsPercentage: 0.60,
-      fatsPercentage: 0.45,
+      fatsPercentage: 0.29,
+      proteinPercentage: 0.65,
+      carbsPercentage: 0.85,
     );
   }
 
