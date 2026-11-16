@@ -5,11 +5,11 @@ class AppColors {
 
   // Main brand color
   static const Color primary = Color(0xFF8A47EB);
+  static const Color primaryLight = Color(0xFFEDE5F9);
 
   // Text and backgrounds
   static const Color textPrimary = Color(0xFF000000);
-  static const Color textSecondary = Color(0xFF858585);
-  static const Color textMuted = Color(0xFF676767);
+  static const Color textSecondary = Color(0xFF676767);
   static const Color background = Color(0xFFFFFFFF);
   static const Color surface = Color(0xFFF3F3F3);
   static const Color border = Color(0xFFE5E5E5);

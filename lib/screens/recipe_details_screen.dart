@@ -140,7 +140,6 @@ class RecipeDetailsScreen extends StatelessWidget {
             '$category / ${meal.preparationTimeMinutes} mins',
             textAlign: TextAlign.center,
             style: AppTypography.label.copyWith(
-              color: AppColors.textMuted,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -207,7 +206,7 @@ class RecipeDetailsScreen extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             '${meal.servings} serves',
-            style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+            style: AppTypography.caption,
           ),
           const Spacer(),
           _servingButton(Icons.remove),
@@ -248,7 +247,7 @@ class RecipeDetailsScreen extends StatelessWidget {
             Text(
               parsed.$2,
               style: AppTypography.body.copyWith(
-                color: AppColors.textMuted,
+                color: AppColors.textSecondary,
               ),
             ),
         ],

@@ -97,10 +97,7 @@ class ProgressCard extends StatelessWidget {
       children: [
         const Text(
           'Calories',
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.textMuted,
-          ),
+          style: AppTypography.label,
         ),
         const SizedBox(height: 6),
         Row(

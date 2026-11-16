@@ -312,7 +312,7 @@ class _MealCard extends StatelessWidget {
       return Container(
         height: 170,
         width: double.infinity,
-        color: const Color(0xFFEDE5F9),
+        color: AppColors.primaryLight,
         child: const Icon(Icons.restaurant, size: 48, color: AppColors.primary),
       );
     }
@@ -325,7 +325,7 @@ class _MealCard extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => Container(
         height: 170,
         width: double.infinity,
-        color: const Color(0xFFEDE5F9),
+        color: AppColors.primaryLight,
         child: const Icon(Icons.broken_image_outlined, size: 40, color: AppColors.primary),
       ),
     );

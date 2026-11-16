@@ -7,7 +7,7 @@ class MockMealDataSource implements MealDataSource {
       id: 'meal_001',
       name: 'Avocado Toast',
       description: 'Whole grain toast with creamy avocado and eggs.',
-      imageUrl: '',
+      imageUrl: 'https://media.istockphoto.com/id/2202730620/photo/tasty-avocado-toast-with-poached-eggs-on-plate.jpg?s=612x612&w=0&k=20&c=C0FCvP3tADM1zy4QdGMqjAX4tAuc-h-pnvzoc9tIWw4=',
       preparationTimeMinutes: 15,
       servings: 1,
       calories: 350,
