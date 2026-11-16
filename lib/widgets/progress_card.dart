@@ -22,7 +22,7 @@ class ProgressCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.card),
         border: Border.all(
           color: Colors.black,
           width: 0.5,
@@ -46,6 +46,7 @@ class ProgressCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const Text(
@@ -98,7 +99,7 @@ class ProgressCard extends StatelessWidget {
           'Calories',
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey,
+            color: AppColors.textMuted,
           ),
         ),
         const SizedBox(height: 6),
@@ -145,7 +146,7 @@ class ProgressCard extends StatelessWidget {
                   value: progress,
                   strokeWidth: 6,
                   strokeCap: StrokeCap.round,
-                  backgroundColor: color.withOpacity(0.15),
+                  backgroundColor: AppColors.progressTrack,
                   valueColor: AlwaysStoppedAnimation(color),
                 ),
               ),
@@ -172,36 +173,35 @@ class ProgressCard extends StatelessWidget {
   }
 
   Widget _buildEncouragementMessage() {
-  return Container(
-    padding: const EdgeInsets.all(AppSpacing.sm),
-    decoration: BoxDecoration(
-      color: AppColors.background,
-      borderRadius: BorderRadius.circular(AppRadii.medium),
-    ),
-    child: Row(
-      children: [
-        const CircleAvatar(
-          radius: 18,
-          backgroundColor: AppColors.border,
-          child: Icon(
-            Icons.person,
-            color: AppColors.textSecondary,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        const Expanded(
-          child: Text(
-            "Keep the pace! You're doing great.",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadii.medium),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.border,
+            child: Icon(
+              Icons.person,
+              color: AppColors.textSecondary,
+              size: 20,
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+          const SizedBox(width: AppSpacing.sm),
+          const Expanded(
+            child: Text(
+              "Keep the pace! You're doing great.",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

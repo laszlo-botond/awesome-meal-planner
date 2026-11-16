@@ -208,6 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBottomNavigation() {
     return NavigationBar(
+      backgroundColor: AppColors.background,
       selectedIndex: _selectedNavigationIndex,
       onDestinationSelected: (index) {
         setState(() {
@@ -254,13 +255,13 @@ class _MealCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(AppRadii.large),
+      borderRadius: BorderRadius.circular(AppRadii.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.large),
+        borderRadius: BorderRadius.circular(AppRadii.card),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadii.large),
+            borderRadius: BorderRadius.circular(AppRadii.card),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.04),

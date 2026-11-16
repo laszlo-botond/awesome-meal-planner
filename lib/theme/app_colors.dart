@@ -7,11 +7,13 @@ class AppColors {
   static const Color primary = Color(0xFF8A47EB);
 
   // Text and backgrounds
-  static const Color textPrimary = Color(0xFF171717);
+  static const Color textPrimary = Color(0xFF000000);
   static const Color textSecondary = Color(0xFF858585);
+  static const Color textMuted = Color(0xFF676767);
   static const Color background = Color(0xFFFFFFFF);
-  static const Color surface = Color(0xFFF7F7F7);
+  static const Color surface = Color(0xFFF3F3F3);
   static const Color border = Color(0xFFE5E5E5);
+  static const Color progressTrack = surface;
   static const Color navLinkText = Color(0xFF1F73F1);
 
   // Progress indicators
