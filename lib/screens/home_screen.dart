@@ -1,13 +1,17 @@
-
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/meal.dart';
-import 'recipe_details_screen.dart';
-import '../viewmodels/home_viewmodel.dart';
-import '../widgets/progress_card.dart';
+import '../state/favorites_providers.dart';
 import '../theme/app_theme.dart';
+import '../viewmodels/home_viewmodel.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/meal_card.dart';
+import '../widgets/progress_card.dart';
+import 'favorites_screen.dart';
+import 'recipe_details_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   final HomeViewModel viewModel;
 
   const HomeScreen({
@@ -16,20 +20,31 @@ class HomeScreen extends StatefulWidget {
   });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final TextEditingController _searchController = TextEditingController();
   int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    widget.viewModel.loadMeals();
+    // Favorites live in Riverpod; the catalog keeps its ChangeNotifier.
+    ref.read(favoritesProvider.notifier).initialize();
+    widget.viewModel.initialize();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final favoriteIds = ref.watch(favoritesProvider).ids;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -38,9 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: AnimatedBuilder(
                 animation: widget.viewModel,
-                builder: (context, child) {
-                  return _buildContent();
-                },
+                builder: (context, child) => _buildContent(favoriteIds),
               ),
             ),
           ],
@@ -62,10 +75,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const CircleAvatar(
             radius: 20,
-            backgroundColor: Color(0xFFE8D9FF),
+            backgroundColor: AppColors.primaryLight,
             child: Icon(
               Icons.person,
-              color: Color(0xFF9147F5),
+              color: AppColors.primary,
             ),
           ),
           const Spacer(),
@@ -82,8 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Main content
 
-  Widget _buildContent() {
-    switch (widget.viewModel.state) {
+  Widget _buildContent(Set<String> favoriteIds) {
+    final viewModel = widget.viewModel;
+
+    switch (viewModel.state) {
       case HomeViewState.initial:
       case HomeViewState.loading:
         return const Center(
@@ -93,20 +108,44 @@ class _HomeScreenState extends State<HomeScreen> {
       case HomeViewState.error:
         return _buildErrorState();
 
+      case HomeViewState.empty:
+        return _buildEmptyState();
+
       case HomeViewState.loaded:
-        return _buildLoadedContent();
+        return _buildLoadedContent(favoriteIds);
     }
   }
 
-  Widget _buildLoadedContent() {
+  Widget _buildEmptyState() {
+    final isSearch = widget.viewModel.activeQuery.isNotEmpty;
+
+    return EmptyState(
+      icon: isSearch ? Icons.search_off : Icons.restaurant_menu,
+      title: isSearch ? 'No recipes found' : 'No recipes yet',
+      message: isSearch
+          ? 'Nothing matched "${widget.viewModel.activeQuery}". Try another search.'
+          : 'There are no recipes to show right now.',
+      actionLabel: isSearch ? 'Show all recipes' : null,
+      onAction: isSearch ? widget.viewModel.clearSearch : null,
+    );
+  }
+
+  Widget _buildLoadedContent(Set<String> favoriteIds) {
+    final viewModel = widget.viewModel;
+
     return RefreshIndicator(
-      onRefresh: widget.viewModel.loadMeals,
+      onRefresh: viewModel.activeQuery.isEmpty
+          ? viewModel.loadMeals
+          : () => viewModel.searchMeals(viewModel.activeQuery),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           _buildProgressSection(),
           const SizedBox(height: AppSpacing.md),
-          _buildMealSection(),
+          if (viewModel.isCached) _buildOfflineBanner(),
+          _buildSearchField(),
+          const SizedBox(height: AppSpacing.md),
+          _buildMealSection(favoriteIds),
         ],
       ),
     );
@@ -123,10 +162,82 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildOfflineBanner() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(AppRadii.small),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.cloud_off, size: 16, color: AppColors.primary),
+            SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                'Showing saved recipes (offline)',
+                style: TextStyle(fontSize: 12, color: AppColors.primary),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Search
+
+  Widget _buildSearchField() {
+    final viewModel = widget.viewModel;
+
+    return TextField(
+      controller: _searchController,
+      textInputAction: TextInputAction.search,
+      onSubmitted: viewModel.searchMeals,
+      decoration: InputDecoration(
+        hintText: 'Search recipes',
+        prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+        suffixIcon: viewModel.activeQuery.isEmpty
+            ? null
+            : IconButton(
+                tooltip: 'Clear search',
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  _searchController.clear();
+                  viewModel.clearSearch();
+                },
+              ),
+        filled: true,
+        fillColor: AppColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadii.medium),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
   // Meal recommendations
 
-  Widget _buildMealSection() {
-    final meals = widget.viewModel.meals;
+  void _openRecipe(Meal meal) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RecipeDetailsScreen(meal: meal),
+      ),
+    );
+  }
+
+  Widget _buildMealSection(Set<String> favoriteIds) {
+    final viewModel = widget.viewModel;
+    final meals = viewModel.meals;
+    final title = viewModel.activeQuery.isEmpty
+        ? 'Recommended for you'
+        : 'Results for "${viewModel.activeQuery}"';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,41 +246,35 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Text(
-                'Recommended for you',
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             TextButton(
-              onPressed: () {
-                // Meal recommendations screen will be implemented later.
-              },
-              child: const Text('View all'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => FavoritesScreen(viewModel: viewModel),
+                ),
+              ),
+              child: const Text('View favorites'),
             ),
           ],
         ),
         const SizedBox(height: 8),
-
-        if (meals.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(
-              child: Text('No meals available yet.'),
-            ),
-          )
-        else
-          ...meals.map(
-            (meal) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _MealCard(
-                meal: meal,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => RecipeDetailsScreen(meal: meal),
-                  ),
-                ),
-              ),
+        ...meals.map(
+          (meal) => Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: MealCard(
+              meal: meal,
+              isFavorite: favoriteIds.contains(meal.id),
+              onTap: () => _openRecipe(meal),
+              onFavoriteTap: () =>
+                  ref.read(favoritesProvider.notifier).toggle(meal.id),
             ),
           ),
+        ),
       ],
     );
   }
@@ -177,6 +282,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // Error state
 
   Widget _buildErrorState() {
+    final viewModel = widget.viewModel;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -189,19 +296,41 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.redAccent,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Something went wrong while loading meals.',
+            Text(
+              _errorMessageFor(viewModel.failure),
               textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
+            if (viewModel.errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                viewModel.errorMessage!,
+                textAlign: TextAlign.center,
+                style: AppTypography.caption,
+              ),
+            ],
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: widget.viewModel.retryLoadingMeals,
+              onPressed: viewModel.retryLoadingMeals,
               child: const Text('Try again'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _errorMessageFor(MealLoadFailure? failure) {
+    return switch (failure) {
+      MealLoadFailure.network =>
+        'You appear to be offline. Check your connection and try again.',
+      MealLoadFailure.server =>
+        'The recipe service is temporarily unavailable. Please try again.',
+      MealLoadFailure.response =>
+        'The recipe service returned unexpected data. Please try again.',
+      MealLoadFailure.unknown || null =>
+        'Something went wrong while loading meals.',
+    };
   }
 
   // Bottom navigation
@@ -236,98 +365,6 @@ class _HomeScreenState extends State<HomeScreen> {
           label: 'Chat',
         ),
       ],
-    );
-  }
-}
-
-// Private meal card widget
-
-class _MealCard extends StatelessWidget {
-  final Meal meal;
-  final VoidCallback onTap;
-
-  const _MealCard({
-    required this.meal,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(AppRadii.card),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadii.card),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildImage(),
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(meal.name, style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(meal.description, style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        const Icon(Icons.schedule, size: 15, color: AppColors.textSecondary),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text('${meal.preparationTimeMinutes} min', style: AppTypography.label),
-                        const SizedBox(width: AppSpacing.md),
-                        const Icon(Icons.local_fire_department_outlined, size: 15, color: AppColors.textSecondary),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text('${meal.calories.round()} kcal', style: AppTypography.label),
-                        const Spacer(),
-                        const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.primary),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImage() {
-    if (meal.imageUrl.isEmpty) {
-      return Container(
-        height: 170,
-        width: double.infinity,
-        color: AppColors.primaryLight,
-        child: const Icon(Icons.restaurant, size: 48, color: AppColors.primary),
-      );
-    }
-
-    return Image.network(
-      meal.imageUrl,
-      height: 170,
-      width: double.infinity,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => Container(
-        height: 170,
-        width: double.infinity,
-        color: AppColors.primaryLight,
-        child: const Icon(Icons.broken_image_outlined, size: 40, color: AppColors.primary),
-      ),
     );
   }
 }

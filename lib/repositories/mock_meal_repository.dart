@@ -1,16 +1,16 @@
-import '../models/meal.dart';
+import '../models/meal_fetch_result.dart';
 import '../services/meal_data_source.dart';
 import 'meal_repository.dart';
 
 class MockMealRepository implements MealRepository {
-  final MealDataSource dataSource;
-
   MockMealRepository({
     required this.dataSource,
   });
 
+  final MealDataSource dataSource;
+
   @override
-  Future<List<Meal>> getMeals() async {
-    return await dataSource.getMeals();
+  Future<MealFetchResult> getMeals({String query = ''}) {
+    return dataSource.getMeals(query: query);
   }
 }

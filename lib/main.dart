@@ -1,55 +1,53 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'repositories/mock_meal_repository.dart';
+import 'repositories/api_meal_repository.dart';
 import 'screens/home_screen.dart';
-import 'services/mock_meal_data_source.dart';
-import 'viewmodels/home_viewmodel.dart';
+import 'services/cached_meal_data_source.dart';
+import 'services/my_plate_meal_data_source.dart';
+import 'services/shared_preferences_meal_cache.dart';
+import 'state/favorites_providers.dart';
 import 'theme/app_theme.dart';
+import 'viewmodels/home_viewmodel.dart';
 
-void main() {
-  runApp(const MealPlannerApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Composition root: the persistence plugin is supplied once to Riverpod,
+  // while the catalog ViewModel keeps its existing constructor injection.
+  final preferences = await SharedPreferences.getInstance();
+
+  final remoteDataSource = MyPlateMealDataSource();
+  final dataSource = CachedMealDataSource(
+    remote: remoteDataSource,
+    cache: SharedPreferencesMealCache(preferences),
+  );
+  final mealRepository = ApiMealRepository(dataSource: dataSource);
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(preferences),
+      ],
+      child: MealPlannerApp(
+        viewModel: HomeViewModel(mealRepository: mealRepository),
+      ),
+    ),
+  );
 }
 
-class MealPlannerApp extends StatefulWidget {
-  const MealPlannerApp({super.key});
+class MealPlannerApp extends StatelessWidget {
+  const MealPlannerApp({super.key, required this.viewModel});
 
-  @override
-  State<MealPlannerApp> createState() => _MealPlannerAppState();
-}
-
-class _MealPlannerAppState extends State<MealPlannerApp> {
-  late final HomeViewModel _homeViewModel;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Initialize dependencies.
-    final dataSource = MockMealDataSource();
-
-    final repository = MockMealRepository(
-      dataSource: dataSource,
-    );
-
-    _homeViewModel = HomeViewModel(
-      mealRepository: repository,
-    );
-  }
-
-  @override
-  void dispose() {
-    _homeViewModel.dispose();
-    super.dispose();
-  }
+  final HomeViewModel viewModel;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Meal Planner',
       theme: AppTheme.light,
-      home: HomeScreen(
-        viewModel: _homeViewModel,
-      ),
+      home: HomeScreen(viewModel: viewModel),
     );
   }
 }
