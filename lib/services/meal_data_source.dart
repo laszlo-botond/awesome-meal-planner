@@ -1,5 +1,6 @@
-import '../models/meal.dart';
+import '../models/meal_fetch_result.dart';
 
 abstract class MealDataSource {
-  Future<List<Meal>> getMeals();
+  /// Loads the catalog, or the recipes matching [query] when it is non-empty.
+  Future<MealFetchResult> getMeals({String query = ''});
 }

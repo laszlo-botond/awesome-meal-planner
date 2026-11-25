@@ -1,4 +1,5 @@
 import '../models/meal.dart';
+import '../models/meal_fetch_result.dart';
 import 'meal_data_source.dart';
 
 class MockMealDataSource implements MealDataSource {
@@ -84,9 +85,15 @@ class MockMealDataSource implements MealDataSource {
   ];
 
   @override
-  Future<List<Meal>> getMeals() async {
-    // await Future.delayed(const Duration(milliseconds: 50));
+  Future<MealFetchResult> getMeals({String query = ''}) async {
+    if (query.isEmpty) {
+      return MealFetchResult(meals: List.unmodifiable(_meals));
+    }
 
-    return List.unmodifiable(_meals);
+    final needle = query.toLowerCase();
+    final matches = _meals
+        .where((meal) => meal.name.toLowerCase().contains(needle))
+        .toList(growable: false);
+    return MealFetchResult(meals: matches);
   }
 }

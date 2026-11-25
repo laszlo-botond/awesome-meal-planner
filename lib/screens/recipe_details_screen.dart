@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/meal.dart';
+import '../state/favorites_providers.dart';
 import '../theme/app_theme.dart';
+import '../widgets/favorite_button.dart';
 
-class RecipeDetailsScreen extends StatelessWidget {
+class RecipeDetailsScreen extends ConsumerWidget {
   final Meal meal;
 
   const RecipeDetailsScreen({
@@ -12,7 +15,12 @@ class RecipeDetailsScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavorite = ref.watch(favoritesProvider).contains(meal.id);
+    return _buildScreen(context, ref, isFavorite);
+  }
+
+  Widget _buildScreen(BuildContext context, WidgetRef ref, bool isFavorite) {
     final category = meal.tags.isNotEmpty ? meal.tags.first : 'Recipe';
 
     return Scaffold(
@@ -24,7 +32,7 @@ class RecipeDetailsScreen extends StatelessWidget {
             left: 0,
             right: 0,
             height: 320,
-            child: _buildImageHeader(context),
+            child: _buildImageHeader(context, ref, isFavorite),
           ),
           Positioned.fill(
             top: 260,
@@ -65,7 +73,7 @@ class RecipeDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImageHeader(BuildContext context) {
+  Widget _buildImageHeader(BuildContext context, WidgetRef ref, bool isFavorite) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -73,7 +81,7 @@ class RecipeDetailsScreen extends StatelessWidget {
           Image.network(
             meal.imageUrl,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _imagePlaceholder(),
+            errorBuilder: (_, _, _) => _imagePlaceholder(),
           )
         else
           _imagePlaceholder(),
@@ -89,10 +97,9 @@ class RecipeDetailsScreen extends StatelessWidget {
         Positioned(
           top: MediaQuery.paddingOf(context).top + AppSpacing.xs,
           right: AppSpacing.sm,
-          child: IconButton(
-            tooltip: 'More options',
-            onPressed: () {},
-            icon: const Icon(Icons.more_horiz, color: Colors.black, size: 26),
+          child: FavoriteButton(
+            isFavorite: isFavorite,
+            onToggle: () => ref.read(favoritesProvider.notifier).toggle(meal.id),
           ),
         ),
       ],
@@ -113,6 +120,10 @@ class RecipeDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildTitle(String category) {
+    final subtitle = meal.preparationTimeMinutes > 0
+        ? '$category / ~${meal.preparationTimeMinutes} mins'
+        : category;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -137,7 +148,7 @@ class RecipeDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '$category / ${meal.preparationTimeMinutes} mins',
+            subtitle,
             textAlign: TextAlign.center,
             style: AppTypography.label.copyWith(
               fontWeight: FontWeight.normal,
@@ -150,10 +161,10 @@ class RecipeDetailsScreen extends StatelessWidget {
 
   Widget _buildNutritionSummary() {
     final items = [
-      ('${meal.calories.round()} k', 'Energy'),
-      ('${meal.protein.round()} g', 'Protein'),
-      ('${meal.carbohydrates.round()} g', 'Carbs'),
-      ('${meal.fats.round()} g', 'Fat'),
+      (_nutrition(meal.calories, 'k'), 'Energy'),
+      (_nutrition(meal.protein, 'g'), 'Protein'),
+      (_nutrition(meal.carbohydrates, 'g'), 'Carbs'),
+      (_nutrition(meal.fats, 'g'), 'Fat'),
     ];
 
     return Container(
@@ -190,6 +201,11 @@ class RecipeDetailsScreen extends StatelessWidget {
     );
   }
 
+  String _nutrition(double? value, String unit) {
+    if (value == null) return '—';
+    return '${value.round()} $unit';
+  }
+
   Widget _buildIngredientsHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -208,24 +224,8 @@ class RecipeDetailsScreen extends StatelessWidget {
             '${meal.servings} serves',
             style: AppTypography.caption,
           ),
-          const Spacer(),
-          _servingButton(Icons.remove),
-          const SizedBox(width: 1),
-          _servingButton(Icons.add),
         ],
       ),
-    );
-  }
-
-  Widget _servingButton(IconData icon) {
-    return Container(
-      width: 27,
-      height: 25,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.textSecondary, width: 0.8),
-        borderRadius: BorderRadius.circular(AppRadii.small / 2),
-      ),
-      child: Icon(icon, size: 17, color: AppColors.textPrimary),
     );
   }
 
@@ -256,7 +256,9 @@ class RecipeDetailsScreen extends StatelessWidget {
   }
 
   (String, String) _splitIngredient(String ingredient) {
-    final match = RegExp(r'^(\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|tbsp|tsp|slices?|cups?|pieces?)?)\s+(.+)$',
+    // Supports whole numbers, decimals and fractions such as "1/2 cup".
+    final match = RegExp(
+      r'^(\d+(?:[/.,]\d+)?\s*(?:g|kg|ml|l|tbsp|tsp|slices?|cups?|pieces?)?)\s+(.+)$',
       caseSensitive: false,
     ).firstMatch(ingredient.trim());
 
@@ -277,7 +279,7 @@ class RecipeDetailsScreen extends StatelessWidget {
         width: double.infinity,
         height: 48,
         child: ElevatedButton(
-          onPressed: () => _showCookingInstructions(context),
+          onPressed: () => _showCookingPlaceholder(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -298,7 +300,7 @@ class RecipeDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _showCookingInstructions(BuildContext context) {
+  void _showCookingPlaceholder(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Cooking mode will be available in a future update.'),
